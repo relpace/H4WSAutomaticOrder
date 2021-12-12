@@ -10,7 +10,7 @@
 
 
 
-### 配置方法
+## 配置方法
 编辑config.ini，并置于main.py同目录下
 
 [mode]
