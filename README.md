@@ -1,4 +1,4 @@
-# H4WSAutomaticOrder
+# XSTAutomaticOrder
 在校膳通平台上自动点餐
 
 设置config.ini，并置于main.py同目录下
