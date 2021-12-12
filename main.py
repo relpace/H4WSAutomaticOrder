@@ -6,7 +6,7 @@ import configparser
 
 s = requests.session()
 c = configparser.ConfigParser()
-text=''
+text = ''
 
 
 def login(username, passwd):
@@ -45,7 +45,7 @@ def get_meal(user_dict):
     return mealdata
 
 
-def order_code(code):
+def order(orderlist):
     global text
     global is_ordered
     global days_of_week
@@ -54,15 +54,8 @@ def order_code(code):
     global y
     global headers
     global user_dict
-    cartids=[0]*days_of_week
-    orderlist = []
     url = 'https://xst.nfcpwl.com/extInterface/wx/cart'
-    i = 0
-    while len(orderlist) != days_of_week:
-        if i >= len(code):
-            i = 0
-        orderlist.append(ord(code[i]) - ord('A'))
-        i += 1
+    cartids = [0] * days_of_week
     for j in range(days_of_week):
         if is_ordered[j]:
             continue
@@ -77,22 +70,45 @@ def order_code(code):
             'price': packagedata[6 * j + orderlist[j]]['PACKAGE_PRICE'],
         }
 
-        resp = s.post(url, headers=headers, data=data,)
+        resp = s.post(url, headers=headers, data=data, )
 
-        cartids[j]=json.loads(resp.text)['mdata']['data']['cartId']
+        cartids[j] = json.loads(resp.text)['mdata']['data']['cartId']
     # purchase
-    purchase_url='https://xst.nfcpwl.com/extInterface/wx/order'
-    purchase_data={
+    purchase_url = 'https://xst.nfcpwl.com/extInterface/wx/order'
+    purchase_data = {
         'cartIds': cartids[:],
         'customId': y['customId'],
         'openId': y['openId'],
         'customType': user_dict['stuIdType'],
         'operationId': "100",
-        'paymentStatus':'19',
+        'paymentStatus': '19',
 
     }
-    purchase_resp = s.post(purchase_url,headers=headers,data=purchase_data)
+    purchase_resp = s.post(purchase_url, headers=headers, data=purchase_data)
     print(purchase_resp.text)
+
+
+def order_rand():
+    import random
+    global is_ordered
+    global days_of_week
+    orderlist = []
+    while len(orderlist) != days_of_week:
+        orderlist.append(random.randint(1, 6))
+    order(orderlist)
+
+
+def order_code(code):
+    global days_of_week
+    orderlist = []
+
+    i = 0
+    while len(orderlist) != days_of_week:
+        if i >= len(code):
+            i = 0
+        orderlist.append(ord(code[i]) - ord('A'))
+        i += 1
+    order(orderlist)
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
     "Referer": "https://xst.nfcpwl.com/wx/index.html",
@@ -115,4 +131,8 @@ for j in range(days_of_week):
     if mealdates[j]['ORDERED_NUM'] == 1:
         is_ordered[j] = True
 if c.get('mode', 'order_mode') == 'code':
+    print('按序号点餐模式')
     order_code(c.get('preferences', 'code').split())
+elif c.get('mode', 'order_mode') == 'rand':
+    print('随机点餐模式')
+    order_rand()
