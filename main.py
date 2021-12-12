@@ -1,23 +1,20 @@
+#!/usr/bin/python3.7
+# -- coding:utf8 --
 import hashlib
 import requests
-import http.cookiejar as hc
 import json
 import configparser
-
+import sys
 s = requests.session()
 c = configparser.ConfigParser()
-text = ''
 
 
 def login(username, passwd):
     global headers
-    global cookie
     password_md5 = hashlib.md5(passwd.encode("utf-8")).hexdigest()
     login_url = 'https://xst.nfcpwl.com/extInterface/wx/loginByStuCard'
 
     data = {'stuCardNo': username, 'stuCardPwd': password_md5}
-    open_id = {'password': '',
-               'schoolNo': '3301020003', }
     login_response = s.post(login_url, headers=headers, data=data, )
     response = {}
     z = json.loads(login_response.text)
@@ -26,9 +23,11 @@ def login(username, passwd):
     response['customId'] = z['mdata']['data'][0]['stuNo']
     response['stuIdType'] = z['mdata']['data'][0]['stuIdType']
     openidurl = 'https://xst.nfcpwl.com/extInterface/wx/students/openId'
-    open_id['openId'] = response['openId']
-    openid_response = s.post(openidurl, headers=headers, data=open_id, )
-    cookie = openid_response.cookies
+    openid_data = {
+        'openId': response['openId'],
+        'schoolNo': "3301020003"
+    }
+    s.post(openidurl, headers=headers, data=openid_data, )
     return response
 
 
@@ -109,6 +108,8 @@ def order_code(code):
         orderlist.append(ord(code[i]) - ord('A'))
         i += 1
     order(orderlist)
+
+
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
     "Referer": "https://xst.nfcpwl.com/wx/index.html",
@@ -116,11 +117,10 @@ headers = {
     "Host": "xst.nfcpwl.com",
     "Accept": "application/json, text/plain, */*",
 }
-c.read('config.ini', encoding='UTF-8')
+c.read(sys.path[0]+'/config.ini', encoding='UTF-8')
 session = requests.session()
-user_name = input("请输入学号/身份证号")
-password = input("请输入密码(默认与学号相同)")
-session.cookies = hc.LWPCookieJar(filename=user_name)
+user_name = c.get('login', 'username')
+password = c.get('login', 'password')
 user_dict = login(user_name, password)
 y = get_meal(user_dict)
 mealdates = y['mdata']['data']['buyerList'][0]['mealDates']
