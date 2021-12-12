@@ -1,11 +1,12 @@
 # XSTAutomaticOrder
 #### 如果你不是H4WS学生 需要自行更改SchoolNo
+#### 本项目依赖于requests库
+#### 初次使用请在终端运行`pip3 install requests`
 ## 功能
 在校膳通平台上自动点餐。支持:
 - 按套餐号点餐
 - 随机点餐
 - 匹配套餐名点餐(还在码)
-
 
 
 
